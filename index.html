@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lady Colts Live</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lady Colts Live">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#f4f4f4;--card:#fff;--ink:#111;--mute:#666;--line:#e2e2e2;--acc:#111;--ok:#1a7f4b;--bad:#b3282d}
+@media (prefers-color-scheme:dark){:root{--bg:#0d0d0d;--card:#1a1a1a;--ink:#ededed;--mute:#a3a3a3;--line:#2e2e2e;--acc:#5c5c5c;--ok:#4cc38a;--bad:#ff7a7e}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;
+  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+main{max-width:1000px;margin:12px auto 40px;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:16px 18px;margin-bottom:20px}
+.card>h2{margin-top:0;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h2{font-size:17px;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}th{color:var(--mute);font-weight:600;font-size:12px}
+.note{color:var(--mute);font-size:13px}.L{color:var(--bad);font-weight:600}
+button,select,input{font:inherit}
+.lv{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.lv-flag{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:#000;color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;border:2px solid #fff;outline:2px solid #000}
+.lv-logo{width:76px;height:76px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none}.lv-logo img{width:56px;height:auto}
+.lv-who{flex:1;min-width:200px}.lv-us{font-size:14px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:700}
+.lv-vs{font-size:30px;font-weight:800;line-height:1.1}.lv-meta{font-size:14px;opacity:.85;margin-top:2px}
+.lv-pick{display:flex;flex-direction:column;gap:4px;font-size:12px;opacity:.95}
+.lv-pick select,.lv-pick input{font-size:16px;padding:8px 10px;border-radius:8px;border:none;min-width:240px;max-width:100%;min-height:40px;background:#fff;color:#111}
+.lv-pick button{font-size:15px;padding:8px 14px;border-radius:8px;border:1px solid #fff;background:#333;color:#fff;margin-left:6px}
+.lv-off{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid #fff;margin-left:8px;vertical-align:2px;letter-spacing:0;text-transform:none}
+.lv-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.lv-qs{display:flex;gap:6px;flex-wrap:wrap}
+.lv-q{min-width:58px;padding:12px 14px;font-weight:700;font-size:17px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.lv-q.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.lv-undo{padding:12px 20px;font-weight:700;font-size:17px;border-radius:10px;border:2px solid var(--ink);background:var(--card);color:var(--ink)}.lv-undo:disabled{opacity:.35}
+.lv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+@media(min-width:900px){.lv-grid{grid-template-columns:repeat(4,1fr)}}
+.lv-tile{background:var(--card);border:1px solid var(--line);border-top:5px solid var(--ink);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.lv-top{display:flex;justify-content:space-between;align-items:center}.lv-name{font-weight:700;font-size:17px}
+.lv-minus{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--mute);font-size:24px;line-height:1}
+.lv-num{font-size:56px;font-weight:800;line-height:1;text-align:center;margin-top:4px}.lv-sub{text-align:center;color:var(--mute);font-size:14px}
+.lv-plus{margin-top:8px;height:110px;border:none;border-radius:12px;background:var(--ink);color:var(--card);font-size:64px;font-weight:700;line-height:1}
+.lv-plus:active,.lv-sbtn:active{transform:scale(.97);filter:brightness(.85)}
+.lv-srow{display:grid;grid-template-columns:minmax(150px,1fr) 1fr 1fr;gap:10px;align-items:center;margin:10px 0}.lv-slbl{display:flex;flex-direction:column;line-height:1.25}.lv-slbl b{font-size:17px}.lv-slbl span{font-size:15px}
+.lv-sbtn{height:72px;border:none;border-radius:12px;background:var(--ink);color:var(--card);font-size:22px;font-weight:800}
+.lv-pts{float:right;font-size:22px}
+.lv-torow{display:flex;align-items:center;gap:12px;margin:8px 0;flex-wrap:wrap}.lv-torow b{width:96px}.lv-torow>div{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.lv-pill{min-width:70px;padding:12px 10px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font-weight:700}
+.lv-pill.used{background:var(--ink);color:var(--card);opacity:.55;text-decoration:line-through}
+.lv-log{list-style:none;padding:0;margin:0}.lv-log li{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:4px 0}
+.lv-log button{width:40px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--mute)}
+.lv-clear{margin-top:10px;padding:10px 16px;border-radius:10px;border:1px solid var(--bad);background:none;color:var(--bad)}
+.lv-send{padding:14px 22px;border-radius:12px;border:none;background:var(--ink);color:var(--card);font-weight:800;font-size:17px;margin:6px 8px 0 0}
+.lv-send2{padding:14px 18px;border-radius:12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font-weight:700;font-size:16px;margin:6px 8px 0 0}
+.lv-toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160%);background:#000;color:#fff;padding:12px 16px;border:1px solid #555;border-radius:12px;display:flex;gap:14px;align-items:center;font-size:16px;transition:transform .2s;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.lv-toast.on{transform:translate(-50%,0)}.lv-toast button{background:#fff;color:#000;border:none;border-radius:8px;padding:8px 14px;font-weight:700}
+@media(max-width:600px){table{font-size:12.5px}th,td{padding:6px 4px}.lv-pick select{min-width:0;width:100%}.lv-vs{font-size:24px}}
+</style></head><body>
+<main><div class="lv" id="lv"></div></main>
+<script>
+/* Lady Colts Live — offline copy of the dashboard's Live Game Stats tab.
+   Everything is saved on this iPad. "Send to dashboard" makes a file the dashboard's Live Game tab can import. */
+const APP_VER='1';
+const LOGO='data:image/png;base64,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';
+const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* 2026-27 schedule (same as the dashboard) */
+const UPC=[
+['Nov 10','Tue','Tanner','Away',''],['Nov 13','Fri','East Lawrence','Home',''],['Nov 16','Mon','Lawrence County','Home',''],['Nov 17','Tue','Wilson','Away',''],
+['Nov 19','Thu','Ardmore','Home',''],['Nov 20','Fri','East Limestone','Away',''],['Nov 21-24','Sat-Tue','Colt Classic','Home','Tournament, teams TBA'],
+['Nov 30','Mon','Colbert County','Home',''],['Dec 3','Thu','Hatton','Home',''],['Dec 4','Fri','Lawrence County','Away',''],['Dec 8','Tue','Lauderdale County','Home',''],
+['Dec 11','Fri','West Limestone','Away',''],['Dec 15','Tue','Elkmont','Away',''],['Dec 22','Tue','Priceville','Home',''],['Dec 28-29','Mon-Tue','West Morgan Tourney','Away','Tournament, teams TBA'],
+['Jan 5','Tue','Priceville','Away',''],['Jan 8','Fri','Lauderdale County','Away',''],['Jan 9-16','Sat-Sat','County Tourney at West','Away','Tournament, teams TBA'],
+['Jan 19','Tue','Elkmont','Home',''],['Jan 21','Thu','West Limestone','Home',''],['Jan 22','Fri','East Lawrence','Away',''],['Jan 25','Mon','Hatton','Away',''],
+['Jan 26','Tue','Ardmore','Away',''],['Jan 28','Thu','Colbert County','Away',''],['Feb 2','Mon','Wilson','Home','']];
+const LV_STATS=[
+  {k:'stl',l:'Steals'},{k:'defl',l:'Deflections'},{k:'dive',l:'Dives on Floor'},{k:'to',l:'Turnovers'}];
+const LV_SHOTS=[{m:'2m',x:'2x',l:'2-pointers',p:2},{m:'3m',x:'3x',l:'3-pointers',p:3},{m:'fm',x:'fx',l:'Free throws',p:1}];
+const LV_LBL={tf:'Full timeout',t30:'30-second timeout','2m':'2PT make','2x':'2PT miss','3m':'3PT make','3x':'3PT miss',fm:'FT make',fx:'FT miss'};LV_STATS.forEach(s=>LV_LBL[s.k]=s.l);
+const lvL=k=>LV_LBL[k]||k;
+const LV_TO_FULL=3,LV_TO_30=2;
+const LV_MON={Oct:9,Nov:10,Dec:11,Jan:0,Feb:1,Mar:2};
+const lvDate=s=>{const m=String(s).match(/^([A-Za-z]{3})\s+(\d+)/);if(!m||LV_MON[m[1]]==null)return null;const mo=LV_MON[m[1]];return new Date(mo>=9?2026:2027,mo,+m[2])};
+const lvSlug=t=>String(t||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const LV_GAMES=UPC.filter(r=>!/tourn|classic|tourney/i.test(r[2]+r[4])).map(r=>({key:'2627-'+lvSlug(r[0]+'-'+r[2]),opp:r[2],date:r[0],day:r[1],ha:r[3],d:lvDate(r[0])}));
+let LV_KEY=null,LV_Q='1',LV={},LV_CLEAR=0,LV_WAKE=null;
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
+
+/* every game saved on this iPad lives under lv:<key> */
+function lvLoadAll(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('lv:')){try{LV[k.slice(3)]=JSON.parse(localStorage.getItem(k))}catch(e){}}}}catch(e){}}
+function lvSave(key){const v=LV[key];v.updated=new Date().toISOString();const ok=ls.set('lv:'+key,JSON.stringify(v));lvStatus(ok?'Saved on this iPad':'Could not save. Free up iPad storage.')}
+function lvStatus(t){const s=document.getElementById('lvSave');if(s)s.textContent=t}
+function lvDefaultKey(){const t=new Date();t.setHours(0,0,0,0);const g=LV_GAMES.find(g=>g.d&&g.d>=t);return (g||LV_GAMES[LV_GAMES.length-1]).key}
+function lvGame(key){const g=LV_GAMES.find(x=>x.key===key);if(g)return g;const v=LV[key];return v?{key,opp:v.opp||'Opponent',date:v.date||'',day:'',ha:v.ha||'',custom:true}:null}
+const lvBlank=g=>({opp:g.opp,date:g.date,ha:g.ha,ev:[],updated:null});
+const lvQs=v=>{const q=['1','2','3','4'];const ot=Math.max(0,...v.ev.map(e=>/^OT(\d)$/.test(e.q)?+e.q.slice(2):0),/^OT(\d)$/.test(LV_Q)?+LV_Q.slice(2):0);for(let i=1;i<=ot;i++)q.push('OT'+i);return q};
+const lvQName=q=>/^OT/.test(q)?q:'Q'+q;
+const unsent=()=>Object.keys(LV).filter(k=>LV[k]&&LV[k].ev&&LV[k].ev.length&&(!LV[k].sent||LV[k].sent<LV[k].updated));
+function lvToast(t,undo){const el=document.getElementById('lvToast');if(!el)return;el.innerHTML=`<span>${esc(t)}</span>${undo?'<button id="lvTU">Undo</button>':''}`;el.classList.add('on');clearTimeout(lvToast.t);lvToast.t=setTimeout(()=>el.classList.remove('on'),3500);const b=el.querySelector('#lvTU');if(b)b.onclick=()=>{lvUndo();el.classList.remove('on')}}
+function lvAdd(k){const v=LV[LV_KEY];v.ev.push({k,q:LV_Q,t:Date.now(),src:'o'});lvSave(LV_KEY);lvWake();lvPaint();
+  lvToast((k==='tf'||k==='t30')?lvL(k)+' used':`${lvL(k)}${LV_STATS.some(s=>s.k===k)?' +1':''} (${lvQName(LV_Q)})`,true)}
+function lvUndo(){const v=LV[LV_KEY];const e=v.ev.pop();if(!e){lvToast('Nothing to undo');return}lvSave(LV_KEY);lvPaint();lvToast('Undid '+lvL(e.k))}
+function lvMinus(k){const v=LV[LV_KEY];for(let i=v.ev.length-1;i>=0;i--)if(v.ev[i].k===k){v.ev.splice(i,1);lvSave(LV_KEY);lvPaint();const s=LV_STATS.find(x=>x.k===k);lvToast('Removed one '+(s?s.l:'timeout'));return}lvToast('None to remove')}
+function lvRemoveAt(t){const v=LV[LV_KEY];const i=v.ev.findIndex(e=>e.t===t);if(i<0)return;v.ev.splice(i,1);lvSave(LV_KEY);lvPaint()}
+async function lvWake(){try{if(!LV_WAKE&&navigator.wakeLock){LV_WAKE=await navigator.wakeLock.request('screen');LV_WAKE.addEventListener('release',()=>LV_WAKE=null)}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&LV_KEY&&LV[LV_KEY]&&LV[LV_KEY].ev.length)lvWake()});
+function lvTOs(v){const qs=lvQs(v),ots=qs.filter(q=>/^OT/.test(q)).length;return {fullMax:LV_TO_FULL+ots,full:v.ev.filter(e=>e.k==='tf'),thirty:v.ev.filter(e=>e.k==='t30'),ots}}
+
+/* ---- Send to dashboard: a small file the dashboard's Live Game tab imports ---- */
+function exportFile(keys){
+  const games={};keys.forEach(k=>games[k]=LV[k]);
+  const body=JSON.stringify({app:'lady-colts-live',ver:1,made:new Date().toISOString(),games});
+  const d=new Date(),stamp=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const one=keys.length===1?'-'+lvSlug(LV[keys[0]].opp):'';
+  return new File([body],`lady-colts-live-${stamp}${one}.json`,{type:'application/json'});
+}
+function markSent(keys){const now=new Date().toISOString();keys.forEach(k=>{LV[k].sent=now;ls.set('lv:'+k,JSON.stringify(LV[k]))})}
+async function lvSend(all){
+  let keys=all?Object.keys(LV).filter(k=>LV[k].ev&&LV[k].ev.length):[LV_KEY];
+  keys=keys.filter(k=>LV[k]&&LV[k].ev&&LV[k].ev.length);
+  if(!keys.length){lvToast('No stats to send yet');return}
+  const f=exportFile(keys);
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:f.name});markSent(keys);lvPaint();lvToast('Sent. Import it in the dashboard’s Live Game tab.');return}
+  }catch(e){if(e&&e.name==='AbortError'){lvToast('Not sent');return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);markSent(keys);lvPaint();lvToast('File saved. Import it in the dashboard’s Live Game tab.');
+}
+
+function lvPaint(){
+  const m=document.getElementById('lv');
+  const g=lvGame(LV_KEY),v=LV[LV_KEY];if(!g||!v)return;
+  const qs=lvQs(v);if(!qs.includes(LV_Q))LV_Q='1';
+  const cnt=(k,q)=>v.ev.filter(e=>e.k===k&&(q==null||e.q===q)).length;
+  const pts=LV_SHOTS.reduce((a,s)=>a+s.p*cnt(s.m),0),fgm=cnt('2m')+cnt('3m'),fga=fgm+cnt('2x')+cnt('3x');
+  const T=lvTOs(v),fullLeft=T.fullMax-T.full.length,thirtyLeft=LV_TO_30-T.thirty.length;
+  const pill=(e,kind)=>e?`<button class="lv-pill used" data-rm="${e.t}">${lvQName(e.q)}</button>`:`<button class="lv-pill" data-to="${kind}">${kind==='tf'?'Full':'30s'}</button>`;
+  const fullP=[...Array(T.fullMax)].map((_,i)=>pill(T.full[i],'tf')).join(''),thP=[...Array(LV_TO_30)].map((_,i)=>pill(T.thirty[i],'t30')).join('');
+  const recent=[...v.ev].reverse().slice(0,12);
+  const opts=LV_GAMES.map(x=>`<option value="${x.key}">${esc(x.date)} · ${x.ha==='Home'?'vs':'@'} ${esc(x.opp)}</option>`).join('')
+    +Object.keys(LV).filter(k=>!LV_GAMES.some(x=>x.key===k)).map(k=>`<option value="${k}">${esc(LV[k].date||'')} · vs ${esc(LV[k].opp||'')}</option>`).join('')
+    +'<option value="__new">+ Other opponent (tournament)…</option>';
+  const us=unsent(),thisUnsent=us.includes(LV_KEY);
+  const offline=navigator.onLine===false;
+  m.innerHTML=`
+  <div class="lv-flag">
+    <div class="lv-logo"><img alt="Clements horseshoe" src="${LOGO}"></div>
+    <div class="lv-who"><div class="lv-us">Lady Colts${offline?'<span class="lv-off">No internet · still saving</span>':''}</div><div class="lv-vs">${g.ha==='Away'?'@':'vs'} ${esc(g.opp)}</div>
+      <div class="lv-meta">${esc([g.day,g.date].filter(Boolean).join(' '))}${g.ha?' · '+esc(g.ha):''}</div></div>
+    <div class="lv-pick"><label for="lvSel">Game</label><select id="lvSel">${opts}</select>
+      <div id="lvNew" style="display:none;margin-top:6px"><input id="lvOpp" placeholder="Opponent name"><button id="lvGo">Start</button></div></div>
+  </div>
+  <div class="lv-bar">
+    <div class="lv-qs">${qs.map(q=>`<button class="lv-q${q===LV_Q?' on':''}" data-q="${q}">${lvQName(q)}</button>`).join('')}<button class="lv-q" data-q="+OT">+ OT</button></div>
+    <button class="lv-undo" id="lvUndo"${v.ev.length?'':' disabled'}>↶ Undo last</button>
+  </div>
+  <div class="lv-grid">${LV_STATS.map(s=>`
+    <div class="lv-tile">
+      <div class="lv-top"><span class="lv-name">${s.l}</span><button class="lv-minus" data-minus="${s.k}" aria-label="Remove one ${s.l}">−</button></div>
+      <div class="lv-num">${cnt(s.k)}</div>
+      <div class="lv-sub">${lvQName(LV_Q)}: ${cnt(s.k,LV_Q)}</div>
+      <button class="lv-plus" data-add="${s.k}" aria-label="Add ${s.l}">+</button>
+    </div>`).join('')}</div>
+  <div class="card"><h2>Shooting <span class="lv-pts">${pts} pts</span><span class="note"> · FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</span></h2>${LV_SHOTS.map(s=>{const a=cnt(s.m)+cnt(s.x),mm=cnt(s.m);return `<div class="lv-srow"><div class="lv-slbl"><b>${s.l}</b><span>${mm}/${a}${a?' · '+Math.round(100*mm/a)+'%':''}</span><span class="note">${lvQName(LV_Q)}: ${cnt(s.m,LV_Q)}/${cnt(s.m,LV_Q)+cnt(s.x,LV_Q)}</span></div><button class="lv-sbtn" data-add="${s.m}">Make</button><button class="lv-sbtn" data-add="${s.x}">Miss</button></div>`}).join('')}</div>
+  <div class="card"><h2>Timeouts <span class="note">· tap one when we use it, tap a used one to give it back</span></h2>
+    <div class="lv-torow"><b>Full</b><div>${fullP}</div><span class="${fullLeft?'':'L'}">${fullLeft} left</span></div>
+    <div class="lv-torow"><b>30-second</b><div>${thP}</div><span class="${thirtyLeft?'':'L'}">${thirtyLeft} left</span></div>
+    <p class="note">High school (NFHS): 3 full and 2 thirty-second timeouts per game; unused ones carry over, and each overtime adds 1 full.</p></div>
+  <div class="card"><h2>By quarter</h2><div style="overflow:auto"><table><tr><th>Stat</th>${qs.map(q=>`<th>${lvQName(q)}</th>`).join('')}<th>Total</th></tr>
+    ${LV_STATS.map(s=>`<tr><td>${s.l}</td>${qs.map(q=>`<td>${cnt(s.k,q)}</td>`).join('')}<td><b>${cnt(s.k)}</b></td></tr>`).join('')}
+    ${LV_SHOTS.map(s=>`<tr><td>${s.l}</td>${qs.map(q=>`<td>${cnt(s.m,q)}/${cnt(s.m,q)+cnt(s.x,q)}</td>`).join('')}<td><b>${cnt(s.m)}/${cnt(s.m)+cnt(s.x)}</b></td></tr>`).join('')}
+    <tr><td>Points</td>${qs.map(q=>`<td>${LV_SHOTS.reduce((a,s)=>a+s.p*cnt(s.m,q),0)}</td>`).join('')}<td><b>${pts}</b></td></tr>
+    <tr><td>Timeouts</td>${qs.map(q=>`<td>${v.ev.filter(e=>(e.k==='tf'||e.k==='t30')&&e.q===q).length||''}</td>`).join('')}<td><b>${T.full.length+T.thirty.length}</b></td></tr></table></div></div>
+  <div class="card"><h2>Send to dashboard</h2>
+    <p style="margin:0 0 4px">${!v.ev.length?'Nothing to send for this game yet.':thisUnsent?'This game hasn’t been sent yet.':'This game was sent. New taps since then will need another send.'}${us.length>1||(us.length===1&&!thisUnsent)?` ${us.length} game${us.length>1?'s':''} not sent in all.`:''}</p>
+    <p class="note" style="margin:0">Once you have signal, tap Send, pick AirDrop (to your MacBook), Save to Files or Messages, then import the file in the dashboard’s Live Game tab.</p>
+    <button class="lv-send" id="lvSend">Send this game</button>${Object.keys(LV).filter(k=>LV[k].ev&&LV[k].ev.length).length>1?'<button class="lv-send2" id="lvSendAll">Send all games</button>':''}</div>
+  <div class="card"><h2>Recent taps</h2>${recent.length?`<ul class="lv-log">${recent.map(e=>`<li><span>${new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})} · ${lvQName(e.q)} · <b>${esc(lvL(e.k))}</b></span><button data-rm="${e.t}" aria-label="Remove">✕</button></li>`).join('')}</ul>`:'<p class="note">Nothing yet. Tap a + to start.</p>'}
+    <p class="note" style="margin-top:10px"><span id="lvSave">${v.updated?'Saved on this iPad':'Not started'}</span> · Works with no internet. Only Clements stats are tracked here.</p>
+    <button class="lv-clear" id="lvClear">${LV_CLEAR&&Date.now()-LV_CLEAR<4000?'Tap again to clear this game':'Clear this game'}</button></div>
+  <div id="lvToast" class="lv-toast"></div>`;
+  const sel=m.querySelector('#lvSel');sel.value=LV_KEY;
+  sel.onchange=()=>{if(sel.value==='__new'){m.querySelector('#lvNew').style.display='block';m.querySelector('#lvOpp').focus();return}lvSwitch(sel.value)};
+  m.querySelector('#lvGo').onclick=()=>{const o=m.querySelector('#lvOpp').value.trim();if(!o)return;const t=new Date(),ds=t.toLocaleDateString('en-US',{month:'short',day:'numeric'});const key='2627-'+lvSlug(ds+'-'+o);LV[key]=LV[key]||{opp:o,date:ds,ha:'',ev:[],updated:null};lvSwitch(key)};
+  m.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>lvAdd(b.dataset.add));
+  m.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>lvMinus(b.dataset.minus));
+  m.querySelectorAll('[data-to]').forEach(b=>b.onclick=()=>lvAdd(b.dataset.to));
+  m.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const e=v.ev.find(x=>x.t===+b.dataset.rm);lvRemoveAt(+b.dataset.rm);if(e)lvToast('Removed '+lvL(e.k))});
+  m.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{let q=b.dataset.q;if(q==='+OT'){const n=qs.filter(x=>/^OT/.test(x)).length;if(LV_Q!=='4'&&!/^OT/.test(LV_Q)&&!n){lvToast('Overtime comes after Q4');return}q='OT'+(n+1)}LV_Q=q;ls.set('lvQ',q);lvPaint()});
+  m.querySelector('#lvUndo').onclick=lvUndo;
+  m.querySelector('#lvSend').onclick=()=>lvSend(false);
+  const sa=m.querySelector('#lvSendAll');if(sa)sa.onclick=()=>lvSend(true);
+  m.querySelector('#lvClear').onclick=()=>{if(LV_CLEAR&&Date.now()-LV_CLEAR<4000){LV_CLEAR=0;v.ev=[];lvSave(LV_KEY);lvPaint();lvToast('Game cleared')}else{LV_CLEAR=Date.now();lvPaint();setTimeout(()=>{if(LV_CLEAR&&Date.now()-LV_CLEAR>=4000){LV_CLEAR=0;lvPaint()}},4100)}};
+}
+function lvSwitch(key){LV_KEY=key;LV_Q='1';ls.set('lvKey',key);ls.set('lvQ','1');if(!LV[key])LV[key]=lvBlank(lvGame(key));lvPaint()}
+window.addEventListener('online',lvPaint);window.addEventListener('offline',lvPaint);
+
+/* start */
+lvLoadAll();
+LV_KEY=ls.get('lvKey');LV_Q=ls.get('lvQ')||'1';
+if(!LV_KEY||!lvGame(LV_KEY))LV_KEY=lvDefaultKey();
+if(!LV[LV_KEY])LV[LV_KEY]=lvBlank(lvGame(LV_KEY));
+lvPaint();
+/* keep this app's saved games from being cleared by the iPad */
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+/* store the app on the iPad so it opens with no internet */
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body></html>
