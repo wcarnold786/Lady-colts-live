@@ -98,14 +98,19 @@ ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.note{color:var(--mute);font
 .lv-pad .lv-tile{padding:8px 10px;display:grid;column-gap:10px;row-gap:0;align-items:center;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-areas:"top plus" "num plus" "sub plus"}
 .lv-pad .lv-tile.lv-L{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"plus top" "plus num" "plus sub"}
 .lv-pad .lv-top{grid-area:top}.lv-pad .lv-num{grid-area:num;font-size:40px;margin:0}.lv-pad .lv-sub{grid-area:sub}
-.lv-pad .lv-plus{grid-area:plus;margin:0;height:100%;min-height:96px;font-size:54px}
+.lv-pad .lv-plus{grid-area:plus;margin:0;height:100%;min-height:84px;font-size:54px}
 .lv-pad .lv-minus{width:40px;height:40px}.lv-pad .lv-name{font-size:16px;line-height:1.15}
 .lv-shsum{grid-row:span 2;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px}
 .lv-shsum b{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}.lv-shsum .lv-big{font-size:34px;font-weight:800;line-height:1}
 .lv-pad .lv-slbl{text-align:center;align-items:center;justify-content:center}
-.lv-pad .lv-sbtn{height:84px;font-size:24px}
+.lv-pad .lv-sbtn{height:68px;font-size:23px}
+.lv-pad .lv-sbtn.lv-or{font-size:20px;line-height:1.1}
 .lv-sbtn.lv-make{background:#1a7f4b;color:#fff}.lv-sbtn.lv-miss{background:#b3282d;color:#fff}
-@media (orientation:landscape) and (min-width:900px){main:has(>.lv),#app{max-width:none}}
+@media (orientation:landscape) and (min-width:900px){main:has(>.lv),#app{max-width:none}
+  .lv-flag{padding:8px 14px;margin-bottom:8px}.lv-logo{width:54px;height:54px}.lv-logo img{width:40px}.lv-vs{font-size:24px}.lv-us{font-size:12px}.lv-meta{font-size:13px}
+  .lv-net{padding:6px 12px;margin-bottom:8px;font-size:14px}.lv-net button{min-height:38px;padding:4px 12px}
+  .lv-bar{margin-bottom:8px}.lv-q{padding:9px 12px}.lv-undo{padding:9px 16px}
+  .lv-pad{gap:10px}.lv-pad .lv-slbl{line-height:1.12}.lv-pad .lv-slbl b{font-size:16px}.lv-pad .lv-slbl span{font-size:14px}.lv-pad .lv-slbl .note{font-size:12px}}
 .lv-sc td,.lv-sc th{text-align:center}.lv-sc td:first-child,.lv-sc th:first-child{text-align:left}
 .lv input.lv-osc{-webkit-user-select:text;user-select:text;width:70px;font:inherit;font-size:20px;font-weight:700;text-align:center;padding:8px 4px;border-radius:10px;border:2px solid var(--ink);background:var(--card);color:var(--ink)}
 @keyframes swL{from{opacity:.3;transform:translateX(40px)}to{opacity:1;transform:none}}@keyframes swR{from{opacity:.3;transform:translateX(-40px)}to{opacity:1;transform:none}}main.swL{animation:swL .22s ease-out}main.swR{animation:swR .22s ease-out}
@@ -146,7 +151,7 @@ const LV_STATS=[
   {k:'dive',l:'Dives on Floor',good:true},
   {k:'to',l:'Turnovers',good:false}];
 const LV_SHOTS=[{m:'2m',x:'2x',l:'2-pointers',p:2},{m:'3m',x:'3x',l:'3-pointers',p:3},{m:'fm',x:'fx',l:'Free throws',p:1}];
-const LV_LBL={tf:'Full timeout',t30:'30-second timeout','2m':'2PT make','2x':'2PT miss','3m':'3PT make','3x':'3PT miss',fm:'FT make',fx:'FT miss'};LV_STATS.forEach(s=>LV_LBL[s.k]=s.l);
+const LV_LBL={tf:'Full timeout',t30:'30-second timeout','2m':'2PT make','2x':'2PT miss','3m':'3PT make','3x':'3PT miss',fm:'FT make',fx:'FT miss',or:'Our offensive rebound',oor:'Opponent offensive rebound'};LV_STATS.forEach(s=>LV_LBL[s.k]=s.l);
 const lvL=k=>LV_LBL[k]||k;
 const LV_TO_FULL=3,LV_TO_30=2;   /* NFHS high school: 3 full (60-second) + 2 thirty-second per game; +1 full per overtime */
 const LV_MON={Oct:9,Nov:10,Dec:11,Jan:0,Feb:1,Mar:2};
@@ -194,6 +199,8 @@ function lvTile(k,cnt,L){const s=LV_STATS.find(x=>x.k===k);return `
       <div class="lv-sub">${lvQName(LV_Q)}: ${cnt(s.k,LV_Q)}</div>
       <button class="lv-plus" data-add="${s.k}" aria-label="Add ${s.l}">+</button>
     </div>`}
+/* possessions from our own taps: shots + turnovers + 0.44 x free throws - offensive rebounds */
+const lvPoss=(v,q)=>{const c=k=>v.ev.filter(e=>e.k===k&&(q==null||e.q===q)).length;return c('2m')+c('2x')+c('3m')+c('3x')+c('to')+0.44*(c('fm')+c('fx'))-c('or')};
 /* opponent score: typed in from the scoreboard at the end of each quarter (running total) */
 const lvOpp=(v,q)=>{const x=v.osc&&v.osc[q];return x&&x.s!=null?x.s:null};
 function lvScoreCalc(v,qs){
@@ -245,9 +252,10 @@ function lvPaint(){
     <button class="lv-undo" id="lvUndo"${v.ev.length?'':' disabled'}>↶ Undo last</button>
   </div>
   <div class="lv-pad">
-    ${lvTile('stl',cnt,1)}<div class="lv-shsum"><b>Shooting</b><div class="lv-big">${pts} pts</div><div class="note">FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</div></div>${lvTile('to',cnt)}
+    ${lvTile('stl',cnt,1)}<div class="lv-shsum"><b>Shooting</b><div class="lv-big">${pts} pts</div><div class="note">FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</div>${(()=>{const ps=lvPoss(v);return ps>=10?`<div class="note"><b>${Math.round(100*pts/ps)}</b> per 100 poss.</div>`:''})()}</div>${lvTile('to',cnt)}
     ${lvTile('defl',cnt,1)}${lvTile('dive',cnt)}
     ${LV_SHOTS.map(s=>{const a=cnt(s.m)+cnt(s.x),mm=cnt(s.m);return `<button class="lv-sbtn lv-miss" data-add="${s.x}">Miss</button><div class="lv-slbl"><b>${s.l}</b><span>${mm}/${a}${a?' · '+Math.round(100*mm/a)+'%':''}</span><span class="note">${lvQName(LV_Q)}: ${cnt(s.m,LV_Q)}/${cnt(s.m,LV_Q)+cnt(s.x,LV_Q)}</span></div><button class="lv-sbtn lv-make" data-add="${s.m}">Make</button>`}).join('')}
+    <button class="lv-sbtn lv-miss lv-or" data-add="oor">Opp OREB</button><div class="lv-slbl"><b>Off. rebounds</b><span>Us ${cnt('or')} · Them ${cnt('oor')}</span><span class="note">${lvQName(LV_Q)}: Us ${cnt('or',LV_Q)} · Them ${cnt('oor',LV_Q)}</span></div><button class="lv-sbtn lv-make lv-or" data-add="or">Our OREB</button>
   </div>
   ${lvScoreHtml(v,qs)}
   <div class="card lv-tos"><h2>Timeouts <span class="note">· tap one when we use it, tap a used one to give it back</span></h2>
@@ -257,6 +265,8 @@ function lvPaint(){
   <div class="card"><h2>By quarter</h2><div style="overflow:auto"><table><tr><th>Stat</th>${qs.map(q=>`<th>${lvQName(q)}</th>`).join('')}<th>Total</th></tr>
     ${LV_STATS.map(s=>`<tr><td>${s.l}</td>${qs.map(q=>`<td>${cnt(s.k,q)}</td>`).join('')}<td><b>${cnt(s.k)}</b></td></tr>`).join('')}
     ${LV_SHOTS.map(s=>`<tr><td>${s.l}</td>${qs.map(q=>`<td>${cnt(s.m,q)}/${cnt(s.m,q)+cnt(s.x,q)}</td>`).join('')}<td><b>${cnt(s.m)}/${cnt(s.m)+cnt(s.x)}</b></td></tr>`).join('')}
+    <tr><td>Our off. rebounds</td>${qs.map(q=>`<td>${cnt('or',q)}</td>`).join('')}<td><b>${cnt('or')}</b></td></tr>
+    <tr><td>Opp off. rebounds</td>${qs.map(q=>`<td>${cnt('oor',q)}</td>`).join('')}<td><b>${cnt('oor')}</b></td></tr>
     <tr><td>Points</td>${qs.map(q=>`<td>${LV_SHOTS.reduce((a,s)=>a+s.p*cnt(s.m,q),0)}</td>`).join('')}<td><b>${pts}</b></td></tr>
     <tr><td>Timeouts</td>${qs.map(q=>`<td>${v.ev.filter(e=>(e.k==='tf'||e.k==='t30')&&e.q===q).length||''}</td>`).join('')}<td><b>${T.full.length+T.thirty.length}</b></td></tr></table></div></div>
   <div class="card"><h2>Recent taps</h2>${recent.length?`<ul class="lv-log">${recent.map(e=>{return `<li><span>${new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})} · ${lvQName(e.q)} · <b>${esc(lvL(e.k))}</b></span><button data-rm="${e.t}" aria-label="Remove">✕</button></li>`}).join('')}</ul>`:'<p class="note">Nothing yet. Tap a + to start.</p>'}
