@@ -93,20 +93,19 @@ ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.note{color:var(--mute);font
 .lv-srow{display:grid;grid-template-columns:minmax(150px,1fr) 1fr 1fr;gap:10px;align-items:center;margin:10px 0}.lv-slbl{display:flex;flex-direction:column;line-height:1.25}.lv-slbl b{font-size:17px}.lv-slbl span{font-size:15px}
 .lv-sbtn{height:72px;border:none;border-radius:12px;background:var(--ink);color:var(--card);font:inherit;font-size:22px;font-weight:800}.lv-sbtn:active{transform:scale(.97);filter:brightness(.85)}
 .lv-pts{float:right;font-size:22px}
-/* thumb layout: steals + deflections on the left, shooting in the middle (miss left, make right), turnovers + dives on the right */
-.lv-pad{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;align-items:stretch}
-.lv-side{display:flex;flex-direction:column;gap:12px}.lv-side .lv-tile{flex:1}
-.lv-pad>.lv-shoot{grid-column:1/-1;grid-row:2;margin:0}
-.lv-shoot .lv-srow{grid-template-columns:1fr minmax(110px,auto) 1fr}
-.lv-shoot .lv-slbl{text-align:center;align-items:center}
+/* thumb layout: left column = steals, deflections, then every Miss; right column = turnovers, dives, then every Make; shot names down the middle */
+.lv-pad{display:grid;grid-template-columns:minmax(0,1fr) minmax(112px,150px) minmax(0,1fr);gap:12px;margin-bottom:16px;align-items:stretch}
+.lv-pad .lv-tile{padding:8px 10px;display:grid;column-gap:10px;row-gap:0;align-items:center;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-areas:"top plus" "num plus" "sub plus"}
+.lv-pad .lv-tile.lv-L{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"plus top" "plus num" "plus sub"}
+.lv-pad .lv-top{grid-area:top}.lv-pad .lv-num{grid-area:num;font-size:40px;margin:0}.lv-pad .lv-sub{grid-area:sub}
+.lv-pad .lv-plus{grid-area:plus;margin:0;height:100%;min-height:96px;font-size:54px}
+.lv-pad .lv-minus{width:40px;height:40px}.lv-pad .lv-name{font-size:16px;line-height:1.15}
+.lv-shsum{grid-row:span 2;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px}
+.lv-shsum b{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}.lv-shsum .lv-big{font-size:34px;font-weight:800;line-height:1}
+.lv-pad .lv-slbl{text-align:center;align-items:center;justify-content:center}
+.lv-pad .lv-sbtn{height:84px;font-size:24px}
 .lv-sbtn.lv-make{background:#1a7f4b;color:#fff}.lv-sbtn.lv-miss{background:#b3282d;color:#fff}
-@media (orientation:landscape) and (min-width:900px){
-  main:has(>.lv),#app{max-width:none}
-  .lv-pad{grid-template-columns:minmax(180px,.8fr) minmax(0,2fr) minmax(180px,.8fr)}
-  .lv-pad>.lv-shoot{grid-column:auto;grid-row:auto;display:flex;flex-direction:column}
-  .lv-shoot .lv-srow{flex:1;margin:6px 0}.lv-shoot .lv-sbtn{height:100%;min-height:92px;font-size:26px}
-  .lv-side .lv-tile{padding:10px}.lv-side .lv-num{font-size:48px}.lv-side .lv-plus{flex:1;min-height:84px;height:auto}
-}
+@media (orientation:landscape) and (min-width:900px){main:has(>.lv),#app{max-width:none}}
 .lv-sc td,.lv-sc th{text-align:center}.lv-sc td:first-child,.lv-sc th:first-child{text-align:left}
 .lv input.lv-osc{-webkit-user-select:text;user-select:text;width:70px;font:inherit;font-size:20px;font-weight:700;text-align:center;padding:8px 4px;border-radius:10px;border:2px solid var(--ink);background:var(--card);color:var(--ink)}
 @keyframes swL{from{opacity:.3;transform:translateX(40px)}to{opacity:1;transform:none}}@keyframes swR{from{opacity:.3;transform:translateX(-40px)}to{opacity:1;transform:none}}main.swL{animation:swL .22s ease-out}main.swR{animation:swR .22s ease-out}
@@ -188,8 +187,8 @@ async function lvExport(keys){
   try{const f=new File([txt],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});lvToast('Sent '+n+' game'+(n>1?'s':''));return}}catch(e){if(e&&e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();lvToast('Saved '+name);
 }
-function lvTile(k,cnt){const s=LV_STATS.find(x=>x.k===k);return `
-    <div class="lv-tile">
+function lvTile(k,cnt,L){const s=LV_STATS.find(x=>x.k===k);return `
+    <div class="lv-tile${L?' lv-L':''}">
       <div class="lv-top"><span class="lv-name">${s.l}</span><button class="lv-minus" data-minus="${s.k}" aria-label="Remove one ${s.l}">−</button></div>
       <div class="lv-num">${cnt(s.k)}</div>
       <div class="lv-sub">${lvQName(LV_Q)}: ${cnt(s.k,LV_Q)}</div>
@@ -246,9 +245,9 @@ function lvPaint(){
     <button class="lv-undo" id="lvUndo"${v.ev.length?'':' disabled'}>↶ Undo last</button>
   </div>
   <div class="lv-pad">
-    <div class="lv-side">${lvTile('stl',cnt)}${lvTile('defl',cnt)}</div>
-    <div class="card lv-shoot"><h2>Shooting <span class="lv-pts">${pts} pts</span><span class="note"> · FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</span></h2>${LV_SHOTS.map(s=>{const a=cnt(s.m)+cnt(s.x),mm=cnt(s.m);return `<div class="lv-srow"><button class="lv-sbtn lv-miss" data-add="${s.x}">Miss</button><div class="lv-slbl"><b>${s.l}</b><span>${mm}/${a}${a?' · '+Math.round(100*mm/a)+'%':''}</span><span class="note">${lvQName(LV_Q)}: ${cnt(s.m,LV_Q)}/${cnt(s.m,LV_Q)+cnt(s.x,LV_Q)}</span></div><button class="lv-sbtn lv-make" data-add="${s.m}">Make</button></div>`}).join('')}</div>
-    <div class="lv-side">${lvTile('to',cnt)}${lvTile('dive',cnt)}</div>
+    ${lvTile('stl',cnt,1)}<div class="lv-shsum"><b>Shooting</b><div class="lv-big">${pts} pts</div><div class="note">FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</div></div>${lvTile('to',cnt)}
+    ${lvTile('defl',cnt,1)}${lvTile('dive',cnt)}
+    ${LV_SHOTS.map(s=>{const a=cnt(s.m)+cnt(s.x),mm=cnt(s.m);return `<button class="lv-sbtn lv-miss" data-add="${s.x}">Miss</button><div class="lv-slbl"><b>${s.l}</b><span>${mm}/${a}${a?' · '+Math.round(100*mm/a)+'%':''}</span><span class="note">${lvQName(LV_Q)}: ${cnt(s.m,LV_Q)}/${cnt(s.m,LV_Q)+cnt(s.x,LV_Q)}</span></div><button class="lv-sbtn lv-make" data-add="${s.m}">Make</button>`}).join('')}
   </div>
   ${lvScoreHtml(v,qs)}
   <div class="card lv-tos"><h2>Timeouts <span class="note">· tap one when we use it, tap a used one to give it back</span></h2>
