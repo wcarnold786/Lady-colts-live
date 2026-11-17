@@ -93,6 +93,22 @@ ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.note{color:var(--mute);font
 .lv-srow{display:grid;grid-template-columns:minmax(150px,1fr) 1fr 1fr;gap:10px;align-items:center;margin:10px 0}.lv-slbl{display:flex;flex-direction:column;line-height:1.25}.lv-slbl b{font-size:17px}.lv-slbl span{font-size:15px}
 .lv-sbtn{height:72px;border:none;border-radius:12px;background:var(--ink);color:var(--card);font:inherit;font-size:22px;font-weight:800}.lv-sbtn:active{transform:scale(.97);filter:brightness(.85)}
 .lv-pts{float:right;font-size:22px}
+/* thumb layout: steals + deflections on the left, shooting in the middle (miss left, make right), turnovers + dives on the right */
+.lv-pad{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;align-items:stretch}
+.lv-side{display:flex;flex-direction:column;gap:12px}.lv-side .lv-tile{flex:1}
+.lv-pad>.lv-shoot{grid-column:1/-1;grid-row:2;margin:0}
+.lv-shoot .lv-srow{grid-template-columns:1fr minmax(110px,auto) 1fr}
+.lv-shoot .lv-slbl{text-align:center;align-items:center}
+.lv-sbtn.lv-make{background:#1a7f4b;color:#fff}.lv-sbtn.lv-miss{background:#b3282d;color:#fff}
+@media (orientation:landscape) and (min-width:900px){
+  main:has(>.lv),#app{max-width:none}
+  .lv-pad{grid-template-columns:minmax(180px,.8fr) minmax(0,2fr) minmax(180px,.8fr)}
+  .lv-pad>.lv-shoot{grid-column:auto;grid-row:auto;display:flex;flex-direction:column}
+  .lv-shoot .lv-srow{flex:1;margin:6px 0}.lv-shoot .lv-sbtn{height:100%;min-height:92px;font-size:26px}
+  .lv-side .lv-tile{padding:10px}.lv-side .lv-num{font-size:48px}.lv-side .lv-plus{flex:1;min-height:84px;height:auto}
+}
+.lv-sc td,.lv-sc th{text-align:center}.lv-sc td:first-child,.lv-sc th:first-child{text-align:left}
+.lv input.lv-osc{-webkit-user-select:text;user-select:text;width:70px;font:inherit;font-size:20px;font-weight:700;text-align:center;padding:8px 4px;border-radius:10px;border:2px solid var(--ink);background:var(--card);color:var(--ink)}
 @keyframes swL{from{opacity:.3;transform:translateX(40px)}to{opacity:1;transform:none}}@keyframes swR{from{opacity:.3;transform:translateX(-40px)}to{opacity:1;transform:none}}main.swL{animation:swL .22s ease-out}main.swR{animation:swR .22s ease-out}
 .lv-torow{display:flex;align-items:center;gap:12px;margin:8px 0;flex-wrap:wrap}.lv-torow b{width:96px}.lv-torow>div{display:flex;gap:8px;flex-wrap:wrap;flex:1}
 .lv-pill{min-width:70px;padding:12px 10px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:inherit;font-weight:700}
@@ -145,7 +161,7 @@ function lvGame(key){const g=LV_GAMES.find(x=>x.key===key);if(g)return g;const v
 const lvBlank=g=>({opp:g.opp,date:g.date,ha:g.ha,ev:[],del:[],updated:null});
 function lvLocal(key){try{return JSON.parse(localStorage.getItem('lv:'+key)||'null')}catch(e){return null}}
 function lvLocalSave(key,v){try{localStorage.setItem('lv:'+key,JSON.stringify(v))}catch(e){}}
-const lvQs=v=>{const q=['1','2','3','4'];const ot=Math.max(0,...v.ev.map(e=>/^OT(\d)$/.test(e.q)?+e.q.slice(2):0),/^OT(\d)$/.test(LV_Q)?+LV_Q.slice(2):0);for(let i=1;i<=ot;i++)q.push('OT'+i);return q};
+const lvQs=v=>{const q=['1','2','3','4'];const ot=Math.max(0,...v.ev.map(e=>/^OT(\d)$/.test(e.q)?+e.q.slice(2):0),/^OT(\d)$/.test(LV_Q)?+LV_Q.slice(2):0,...Object.keys(v.osc||{}).map(q=>/^OT(\d)$/.test(q)&&v.osc[q]&&v.osc[q].s!=null?+q.slice(2):0));for(let i=1;i<=ot;i++)q.push('OT'+i);return q};
 const lvQName=q=>/^OT/.test(q)?q:'Q'+q;
 function lvToast(t,undo){const el=document.getElementById('lvToast');if(!el)return;el.innerHTML=`<span>${esc(t)}</span>${undo?'<button id="lvTU">Undo</button>':''}`;el.classList.add('on');clearTimeout(lvToast.t);lvToast.t=setTimeout(()=>el.classList.remove('on'),3500);const b=el.querySelector('#lvTU');if(b)b.onclick=()=>{lvUndo();el.classList.remove('on')}}
 function lvUndo(){const v=LV[LV_KEY];const e=v.ev.pop();if(!e){lvToast('Nothing to undo');return}(v.del=v.del||[]).push(e.t);lvSave(LV_KEY);lvPaint();lvToast('Undid '+lvL(e.k))}
@@ -165,13 +181,44 @@ function lvNet(){const el=document.getElementById('lvNet');if(!el)return;const n
   el.className='lv-net off';el.innerHTML=`<span><i></i>Offline app. Every tap is saved on this iPad. ${n} game${n===1?'':'s'} with stats.</span><span class="lv-netb">${navigator.onLine===false?'No internet needed':''}</span>`}
 function lvSwitch(key){LV_KEY=key;LV_Q='1';try{localStorage.lvKey=key;localStorage.lvQ='1'}catch(e){}if(!LV[key])LV[key]=lvLocal(key)||lvBlank(lvGame(key)||{opp:'Opponent',date:'',ha:''});lvPaint()}
 async function lvExport(keys){
-  const games={};keys.forEach(k=>{const v=LV[k];if(v&&v.ev&&v.ev.length)games[k]={opp:v.opp,date:v.date,ha:v.ha||'',ev:v.ev.map(e=>({k:e.k,q:e.q,t:e.t})),updated:v.updated}});
+  const games={};keys.forEach(k=>{const v=LV[k];if(v&&((v.ev&&v.ev.length)||Object.keys(v.osc||{}).length))games[k]={opp:v.opp,date:v.date,ha:v.ha||'',ev:(v.ev||[]).map(e=>({k:e.k,q:e.q,t:e.t})),osc:v.osc||{},updated:v.updated}});
   const n=Object.keys(games).length;if(!n){lvToast('No stats to send yet');return}
   const one=n===1?games[Object.keys(games)[0]]:null,name='Lady Colts Live - '+(one?(one.date+' '+one.opp):'all games')+'.json';
   const txt=JSON.stringify({app:'lady-colts-live',exported:new Date().toISOString(),games});
   try{const f=new File([txt],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});lvToast('Sent '+n+' game'+(n>1?'s':''));return}}catch(e){if(e&&e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();lvToast('Saved '+name);
 }
+function lvTile(k,cnt){const s=LV_STATS.find(x=>x.k===k);return `
+    <div class="lv-tile">
+      <div class="lv-top"><span class="lv-name">${s.l}</span><button class="lv-minus" data-minus="${s.k}" aria-label="Remove one ${s.l}">−</button></div>
+      <div class="lv-num">${cnt(s.k)}</div>
+      <div class="lv-sub">${lvQName(LV_Q)}: ${cnt(s.k,LV_Q)}</div>
+      <button class="lv-plus" data-add="${s.k}" aria-label="Add ${s.l}">+</button>
+    </div>`}
+/* opponent score: typed in from the scoreboard at the end of each quarter (running total) */
+const lvOpp=(v,q)=>{const x=v.osc&&v.osc[q];return x&&x.s!=null?x.s:null};
+function lvScoreCalc(v,qs){
+  let run=0;const us=qs.map(q=>run+=LV_SHOTS.reduce((a,s)=>a+s.p*v.ev.filter(e=>e.k===s.m&&e.q===q).length,0));
+  const op=qs.map(q=>lvOpp(v,q)),oq=op.map((o,i)=>o==null?null:i===0?o:op[i-1]==null?null:o-op[i-1]);
+  let last=-1;op.forEach((o,i)=>{if(o!=null)last=i});
+  return {us,op,oq,mg:op.map((o,i)=>o==null?null:us[i]-o),last,head:last<0?'':`Lady Colts ${us[last]} – ${op[last]} <span class="note">(end of ${lvQName(qs[last])})</span>`};
+}
+function lvScoreHtml(v,qs){const S=lvScoreCalc(v,qs),f=n=>n==null?'':n,sg=n=>n==null?'':(n>0?'+':'')+n;
+  return `<div class="card lv-score"><h2>Score <span class="lv-pts" id="lvScoreHead">${S.head}</span></h2>
+    <p class="note" style="margin:0 0 8px">At the end of each quarter, type the opponent's score from the scoreboard.</p>
+    <div style="overflow:auto"><table class="lv-sc"><tr><th></th>${qs.map(q=>`<th>End of ${lvQName(q)}</th>`).join('')}</tr>
+    <tr><td><b>Opponent score</b></td>${qs.map(q=>`<td><input class="lv-osc" type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="250" data-osc="${q}" value="${f(lvOpp(v,q))}" aria-label="Opponent score at end of ${lvQName(q)}"></td>`).join('')}</tr>
+    <tr><td>Lady Colts (our taps)</td>${qs.map((q,i)=>`<td data-us="${i}">${i<=Math.max(qs.indexOf(LV_Q),S.last)?S.us[i]:''}</td>`).join('')}</tr>
+    <tr><td>Opponent points in quarter</td>${qs.map((q,i)=>`<td data-oq="${i}">${f(S.oq[i])}</td>`).join('')}</tr>
+    <tr><td>Margin</td>${qs.map((q,i)=>`<td data-mg="${i}">${sg(S.mg[i])}</td>`).join('')}</tr></table></div></div>`}
+function lvScoreFill(){const m=LV_EL;if(!m)return;const v=LV[LV_KEY],qs=lvQs(v),S=lvScoreCalc(v,qs);
+  const h=m.querySelector('#lvScoreHead');if(h)h.innerHTML=S.head;
+  m.querySelectorAll('[data-us]').forEach(td=>{const i=+td.dataset.us;td.textContent=i<=Math.max(qs.indexOf(LV_Q),S.last)?S.us[i]:''});
+  m.querySelectorAll('[data-oq]').forEach(td=>{const n=S.oq[+td.dataset.oq];td.textContent=n==null?'':n});
+  m.querySelectorAll('[data-mg]').forEach(td=>{const n=S.mg[+td.dataset.mg];td.textContent=n==null?'':(n>0?'+':'')+n})}
+function lvSetOpp(q,val){const v=LV[LV_KEY];val=String(val).trim();if(val!==''&&!isFinite(+val))return;
+  const n=val===''?null:Math.max(0,Math.min(250,Math.round(+val)));const cur=lvOpp(v,q);if(cur===n)return;
+  (v.osc=v.osc||{})[q]={s:n,t:Date.now()};lvSave(LV_KEY);lvScoreFill();lvToast(n==null?`Opponent score cleared (${lvQName(q)})`:`Opponent ${n} at end of ${lvQName(q)}`)}
 function lvPaint(){
   const m=LV_EL;if(!m||!m.isConnected)return;
   const g=lvGame(LV_KEY),v=LV[LV_KEY];if(!g||!v)return;
@@ -198,14 +245,12 @@ function lvPaint(){
     <div class="lv-qs">${qs.map(q=>`<button class="lv-q${q===LV_Q?' on':''}" data-q="${q}">${lvQName(q)}</button>`).join('')}<button class="lv-q" data-q="+OT">+ OT</button></div>
     <button class="lv-undo" id="lvUndo"${v.ev.length?'':' disabled'}>↶ Undo last</button>
   </div>
-  <div class="lv-grid">${LV_STATS.map(s=>`
-    <div class="lv-tile">
-      <div class="lv-top"><span class="lv-name">${s.l}</span><button class="lv-minus" data-minus="${s.k}" aria-label="Remove one ${s.l}">−</button></div>
-      <div class="lv-num">${cnt(s.k)}</div>
-      <div class="lv-sub">${lvQName(LV_Q)}: ${cnt(s.k,LV_Q)}</div>
-      <button class="lv-plus" data-add="${s.k}" aria-label="Add ${s.l}">+</button>
-    </div>`).join('')}</div>
-  <div class="card lv-shoot"><h2>Shooting <span class="lv-pts">${pts} pts</span><span class="note"> · FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</span></h2>${LV_SHOTS.map(s=>{const a=cnt(s.m)+cnt(s.x),mm=cnt(s.m);return `<div class="lv-srow"><div class="lv-slbl"><b>${s.l}</b><span>${mm}/${a}${a?' · '+Math.round(100*mm/a)+'%':''}</span><span class="note">${lvQName(LV_Q)}: ${cnt(s.m,LV_Q)}/${cnt(s.m,LV_Q)+cnt(s.x,LV_Q)}</span></div><button class="lv-sbtn" data-add="${s.m}">Make</button><button class="lv-sbtn" data-add="${s.x}">Miss</button></div>`}).join('')}</div>
+  <div class="lv-pad">
+    <div class="lv-side">${lvTile('stl',cnt)}${lvTile('defl',cnt)}</div>
+    <div class="card lv-shoot"><h2>Shooting <span class="lv-pts">${pts} pts</span><span class="note"> · FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</span></h2>${LV_SHOTS.map(s=>{const a=cnt(s.m)+cnt(s.x),mm=cnt(s.m);return `<div class="lv-srow"><button class="lv-sbtn lv-miss" data-add="${s.x}">Miss</button><div class="lv-slbl"><b>${s.l}</b><span>${mm}/${a}${a?' · '+Math.round(100*mm/a)+'%':''}</span><span class="note">${lvQName(LV_Q)}: ${cnt(s.m,LV_Q)}/${cnt(s.m,LV_Q)+cnt(s.x,LV_Q)}</span></div><button class="lv-sbtn lv-make" data-add="${s.m}">Make</button></div>`}).join('')}</div>
+    <div class="lv-side">${lvTile('to',cnt)}${lvTile('dive',cnt)}</div>
+  </div>
+  ${lvScoreHtml(v,qs)}
   <div class="card lv-tos"><h2>Timeouts <span class="note">· tap one when we use it, tap a used one to give it back</span></h2>
     <div class="lv-torow"><b>Full</b><div>${fullP}</div><span class="${fullLeft?'':'L'}">${fullLeft} left</span></div>
     <div class="lv-torow"><b>30-second</b><div>${thP}</div><span class="${thirtyLeft?'':'L'}">${thirtyLeft} left</span></div>
@@ -226,13 +271,14 @@ function lvPaint(){
   sel.onchange=()=>{if(sel.value==='__new'){m.querySelector('#lvNew').style.display='block';m.querySelector('#lvOpp').focus();return}lvSwitch(sel.value)};
   const go=m.querySelector('#lvGo');go.onclick=()=>{const o=m.querySelector('#lvOpp').value.trim();if(!o)return;const t=new Date(),ds=t.toLocaleDateString('en-US',{month:'short',day:'numeric'});const key='2627-'+lvSlug(ds+'-'+o);LV[key]=LV[key]||{opp:o,date:ds,ha:'',ev:[],updated:null};lvSwitch(key)};
   m.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>lvAdd(b.dataset.add));
+  m.querySelectorAll('[data-osc]').forEach(inp=>{inp.onchange=()=>lvSetOpp(inp.dataset.osc,inp.value);inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()}});
   m.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>lvMinus(b.dataset.minus));
   m.querySelectorAll('[data-to]').forEach(b=>b.onclick=()=>lvAdd(b.dataset.to));
   m.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const e=LV[LV_KEY].ev.find(x=>x.t===+b.dataset.rm);lvRemoveAt(+b.dataset.rm);if(e)lvToast('Removed '+lvL(e.k))});
   m.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{let q=b.dataset.q;if(q==='+OT'){const n=qs.filter(x=>/^OT/.test(x)).length;if(LV_Q!=='4'&&!/^OT/.test(LV_Q)&&!n){lvToast('Overtime comes after Q4');return}q='OT'+(n+1)}LV_Q=q;try{localStorage.lvQ=q}catch(e){}lvPaint()});
   m.querySelector('#lvUndo').onclick=lvUndo;
   m.querySelector('#lvSend').onclick=()=>lvExport([LV_KEY]);m.querySelector('#lvSendAll').onclick=()=>lvExport(Object.keys(LV));
-  m.querySelector('#lvClear').onclick=()=>{if(LV_CLEAR&&Date.now()-LV_CLEAR<4000){LV_CLEAR=0;{const w=LV[LV_KEY];w.del=(w.del||[]).concat(w.ev.map(e=>e.t));w.ev=[]}lvSave(LV_KEY);lvPaint();lvToast('Game cleared')}else{LV_CLEAR=Date.now();lvPaint();setTimeout(()=>{if(LV_CLEAR&&Date.now()-LV_CLEAR>=4000){LV_CLEAR=0;lvPaint()}},4100)}};
+  m.querySelector('#lvClear').onclick=()=>{if(LV_CLEAR&&Date.now()-LV_CLEAR<4000){LV_CLEAR=0;{const w=LV[LV_KEY];w.del=(w.del||[]).concat(w.ev.map(e=>e.t));w.ev=[];Object.keys(w.osc||{}).forEach(q=>w.osc[q]={s:null,t:Date.now()})}lvSave(LV_KEY);lvPaint();lvToast('Game cleared')}else{LV_CLEAR=Date.now();lvPaint();setTimeout(()=>{if(LV_CLEAR&&Date.now()-LV_CLEAR>=4000){LV_CLEAR=0;lvPaint()}},4100)}};
 }
 /* start: load every game saved on this iPad, open today's (or the next) game */
 try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('lv:')===0){const v=lvLocal(k.slice(3));if(v&&Array.isArray(v.ev))LV[k.slice(3)]=v}}}catch(e){}
