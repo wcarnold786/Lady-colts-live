@@ -115,6 +115,15 @@ ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.note{color:var(--mute);font
 .lv-foul .lv-minus{width:40px;height:40px}.lv-fn{display:flex;flex-direction:column;align-items:center;line-height:1.15;min-width:118px}.lv-fn b{font-size:16px}.lv-fn span{font-size:12px}
 .lv-fplus{min-height:48px;padding:0 16px;border:none;border-radius:10px;background:var(--ink);color:var(--card);font:inherit;font-size:17px;font-weight:800}.lv-fplus:active{transform:scale(.97)}
 .lv-foul.near{border-color:#c77700}.lv-foul.bonus{border-color:var(--bad)}.lv-foul.bonus .lv-fn span:first-of-type{color:var(--bad);font-weight:700}.lv-foul.near .lv-fn span:first-of-type{color:#c77700;font-weight:700}
+.lv-pfov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:70;display:flex;align-items:center;justify-content:center;padding:16px}
+.lv-pfbox{background:var(--card);color:var(--ink);border-radius:16px;padding:14px;width:min(640px,100%);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.lv-pfhd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:18px}.lv-pfx{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:18px}
+.lv-pfgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lv-pfb{display:flex;flex-direction:column;align-items:center;gap:1px;padding:10px 4px;min-height:84px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.lv-pfb b{font-size:24px;line-height:1.1}.lv-pfb span{font-size:13px;color:var(--mute)}.lv-pfb i{font-style:normal;font-weight:800;font-size:14px}
+.lv-pfb:active{transform:scale(.96)}.lv-pfb.three{border-color:#c77700}.lv-pfb.four{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--card))}.lv-pfb.out{border-color:var(--bad);opacity:.55}
+.lv-pfnone{margin-top:10px;width:100%;min-height:44px;border-radius:10px;border:1px dashed var(--mute);background:none;color:var(--mute);font:inherit}
+@media(max-width:520px){.lv-pfgrid{grid-template-columns:repeat(4,1fr)}}
 .lv-sec th{color:var(--ink);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding-top:14px;background:var(--bg)}
 .lv-sc td,.lv-sc th{text-align:center}.lv-sc td:first-child,.lv-sc th:first-child{text-align:left}
 .lv input.lv-osc{-webkit-user-select:text;user-select:text;width:70px;font:inherit;font-size:20px;font-weight:700;text-align:center;padding:8px 4px;border-radius:10px;border:2px solid var(--ink);background:var(--card);color:var(--ink)}
@@ -165,13 +174,26 @@ function lvQRows(qs,n){const L='style="text-align:left"',sec=t=>`<tr class="lv-s
    +sec('Offense')+LV_SHOTS.map(s=>row(s.l,q=>`${n(s.m,q)}/${n(s.m,q)+n(s.x,q)}`)).join('')+row(st('to').l,q=>n('to',q))+row('Points',P)
    +sec('Offensive boards')+row('Colts',q=>n('or',q))+row('Opponents',q=>n('oor',q))+sec('Other')+row('Team fouls',q=>n('pf',q));}
 /* Team fouls (NFHS): reset every quarter; opponent shoots 2 starting with our 5th foul in a quarter; overtime counts as part of Q4 */
-const LV_BONUS=5;
+const LV_BONUS=5,LV_FOUL_OUT=5;
+/* Colts roster for player fouls (jersey, initials), in jersey order */
+const LV_ROSTER=[['0','A.F'],['1','A.G'],['2','J.W'],['3','J.H'],['5','K.H'],['12','K.R'],['15','E.R'],['21','L.S'],['22','A.M'],['33','Z.M']];
+const lvPName=p=>{const r=LV_ROSTER.find(x=>x[0]===p);return '#'+p+(r?' '+r[1]:'')};
+const lvPF=(v,p)=>v.ev.filter(e=>e.k==='pf'&&e.p===p).length;
+const lvPFList=v=>{const m={};v.ev.forEach(e=>{if(e.k==='pf'&&e.p!=null)m[e.p]=(m[e.p]||0)+1});return Object.entries(m).sort((x,y)=>y[1]-x[1]||(+x[0])-(+y[0]))};
+function lvPFLine(v){const L=lvPFList(v);if(!L.length)return '';return `<p class="note" style="margin:8px 0 0"><b>Fouls by player:</b> ${L.map(([p,n])=>`<span class="${n>=LV_FOUL_OUT?'L':''}">${esc(lvPName(p))} ${n}${n>=LV_FOUL_OUT?' (out)':''}</span>`).join(' · ')}</p>`}
+function lvFoulPick(){const v=LV[LV_KEY];if(!v)return;let o=document.getElementById('lvPF');if(o)o.remove();
+  o=document.createElement('div');o.id='lvPF';o.className='lv-pfov';
+  o.innerHTML=`<div class="lv-pfbox"><div class="lv-pfhd"><b>Foul on · ${lvQName(LV_Q)}</b><button class="lv-pfx" data-pfx aria-label="Close">✕</button></div>
+    <div class="lv-pfgrid">${LV_ROSTER.map(([j,i])=>{const n=lvPF(v,j);return `<button class="lv-pfb${n>=LV_FOUL_OUT?' out':n===LV_FOUL_OUT-1?' four':n===LV_FOUL_OUT-2?' three':''}" data-pf="${j}"><b>#${j}</b><span>${esc(i)}</span><i>${n?n+(n>=LV_FOUL_OUT?' · out':''):'–'}</i></button>`}).join('')}</div>
+    <button class="lv-pfnone" data-pf="">Not sure who (team foul only)</button></div>`;
+  document.body.appendChild(o);
+  o.onclick=e=>{const b=e.target.closest('[data-pf],[data-pfx]');if(e.target===o||(b&&b.hasAttribute('data-pfx'))){o.remove();return}if(b){o.remove();lvAdd('pf',b.dataset.pf||null)}}}
 const lvFoulQ=(v,q)=>{const isOT=x=>/^OT/.test(x);return v.ev.filter(e=>e.k==='pf'&&(q==='4'||isOT(q)?(e.q==='4'||isOT(e.q)):e.q===q)).length};
 function lvFoulHtml(v){const n=lvFoulQ(v,LV_Q),tot=v.ev.filter(e=>e.k==='pf').length,left=LV_BONUS-n;
   const msg=n>=LV_BONUS?'Bonus: they shoot 2':left===1?'Next foul = bonus':`${left} to bonus`;
   return `<div class="lv-foul${n>=LV_BONUS?' bonus':left===1?' near':''}"><button class="lv-minus" data-minus="pf" aria-label="Remove one foul">−</button>
-    <div class="lv-fn"><b>Fouls ${/^OT/.test(LV_Q)?'Q4+OT':lvQName(LV_Q)}: ${n}</b><span>${msg}</span><span class="note">${tot} total</span></div>
-    <button class="lv-fplus" data-add="pf" aria-label="Add team foul">+ Foul</button></div>`}
+    <div class="lv-fn"><b>Fouls ${/^OT/.test(LV_Q)?'Q4+OT':lvQName(LV_Q)}: ${n}</b><span>${msg}</span><span class="note">${(()=>{const T=lvPFList(v).filter(x=>x[1]>=3);return T.length?T.map(([p,n])=>`<b class="${n>=LV_FOUL_OUT?'L':''}">#${p}: ${n}</b>`).join(' · '):tot+' total'})()}</span></div>
+    <button class="lv-fplus" data-pfopen aria-label="Add team foul">+ Foul</button></div>`}
 const LV_LBL={tf:'Full timeout',t30:'30-second timeout','2m':'2PT make','2x':'2PT miss','3m':'3PT make','3x':'3PT miss',fm:'FT make',fx:'FT miss',or:'Colts offensive rebound',pf:'Team foul',oor:'Opponent offensive rebound'};LV_STATS.forEach(s=>LV_LBL[s.k]=s.l);
 const lvL=k=>LV_LBL[k]||k;
 const LV_TO_FULL=3,LV_TO_30=2;   /* NFHS high school: 3 full (60-second) + 2 thirty-second per game; +1 full per overtime */
@@ -193,8 +215,8 @@ function lvUndo(){const v=LV[LV_KEY];const e=v.ev.pop();if(!e){lvToast('Nothing 
 function lvMinus(k){const v=LV[LV_KEY];for(let i=v.ev.length-1;i>=0;i--)if(v.ev[i].k===k){(v.del=v.del||[]).push(v.ev[i].t);v.ev.splice(i,1);lvSave(LV_KEY);lvPaint();const s=LV_STATS.find(x=>x.k===k);lvToast('Removed one '+(s?s.l:lvL(k).toLowerCase()));return}lvToast('None to remove')}
 function lvRemoveAt(t){const v=LV[LV_KEY];const i=v.ev.findIndex(e=>e.t===t);if(i<0)return;(v.del=v.del||[]).push(t);v.ev.splice(i,1);lvSave(LV_KEY);lvPaint()}
 async function lvWake(){try{if(!LV_WAKE&&navigator.wakeLock){LV_WAKE=await navigator.wakeLock.request('screen');LV_WAKE.addEventListener('release',()=>LV_WAKE=null)}}catch(e){}}
-function lvAdd(k){const v=LV[LV_KEY];let t=Date.now();while(v.ev.some(e=>e.t===t)||(v.del||[]).includes(t))t++;v.ev.push({k,q:LV_Q,t});lvSave(LV_KEY);lvWake();lvPaint();
-  lvToast((k==='tf'||k==='t30')?lvL(k)+' used':`${lvL(k)}${LV_STATS.some(s=>s.k===k)?' +1':''} (${lvQName(LV_Q)})`,true)}
+function lvAdd(k,p){const v=LV[LV_KEY];let t=Date.now();while(v.ev.some(e=>e.t===t)||(v.del||[]).includes(t))t++;v.ev.push(p?{k,q:LV_Q,t,p}:{k,q:LV_Q,t});lvSave(LV_KEY);lvWake();lvPaint();
+  lvToast(k==='pf'&&p?`Foul ${lvPName(p)}: ${lvPF(v,p)}${lvPF(v,p)>=LV_FOUL_OUT?' (fouled out)':''} · ${lvQName(LV_Q)}`:(k==='tf'||k==='t30')?lvL(k)+' used':`${lvL(k)}${LV_STATS.some(s=>s.k===k)?' +1':''} (${lvQName(LV_Q)})`,true)}
 function lvTOs(v){
   const qs=lvQs(v),ots=qs.filter(q=>/^OT/.test(q)).length;
   const full=v.ev.filter(e=>e.k==='tf'),thirty=v.ev.filter(e=>e.k==='t30');
@@ -206,7 +228,7 @@ function lvNet(){const el=document.getElementById('lvNet');if(!el)return;const n
   el.className='lv-net off';el.innerHTML=`<span><i></i>Offline app. Every tap is saved on this iPad. ${n} game${n===1?'':'s'} with stats.</span><span class="lv-netb">${navigator.onLine===false?'No internet needed':''}</span>`}
 function lvSwitch(key){LV_KEY=key;LV_Q='1';try{localStorage.lvKey=key;localStorage.lvQ='1'}catch(e){}if(!LV[key])LV[key]=lvLocal(key)||lvBlank(lvGame(key)||{opp:'Opponent',date:'',ha:''});lvPaint()}
 async function lvExport(keys){
-  const games={};keys.forEach(k=>{const v=LV[k];if(v&&((v.ev&&v.ev.length)||Object.keys(v.osc||{}).length))games[k]={opp:v.opp,date:v.date,ha:v.ha||'',ev:(v.ev||[]).map(e=>({k:e.k,q:e.q,t:e.t})),osc:v.osc||{},updated:v.updated}});
+  const games={};keys.forEach(k=>{const v=LV[k];if(v&&((v.ev&&v.ev.length)||Object.keys(v.osc||{}).length))games[k]={opp:v.opp,date:v.date,ha:v.ha||'',ev:(v.ev||[]).map(e=>({...(e.p!=null?{p:e.p}:{}),k:e.k,q:e.q,t:e.t})),osc:v.osc||{},updated:v.updated}});
   const n=Object.keys(games).length;if(!n){lvToast('No stats to send yet');return}
   const one=n===1?games[Object.keys(games)[0]]:null,name='Lady Colts Live - '+(one?(one.date+' '+one.opp):'all games')+'.json';
   const txt=JSON.stringify({app:'lady-colts-live',exported:new Date().toISOString(),games});
@@ -285,8 +307,8 @@ function lvPaint(){
     <p class="note">High school (NFHS): 3 full and 2 thirty-second timeouts per game; unused ones carry over, and each overtime adds 1 full.</p></div>
   <div class="card"><h2>By quarter</h2><div style="overflow:auto"><table><tr><th>Stat</th>${qs.map(q=>`<th>${lvQName(q)}</th>`).join('')}<th>Total</th></tr>
     ${lvQRows(qs,cnt)}
-    <tr><td>Timeouts</td>${qs.map(q=>`<td>${v.ev.filter(e=>(e.k==='tf'||e.k==='t30')&&e.q===q).length||''}</td>`).join('')}<td><b>${T.full.length+T.thirty.length}</b></td></tr></table></div></div>
-  <div class="card"><h2>Recent taps</h2>${recent.length?`<ul class="lv-log">${recent.map(e=>{return `<li><span>${new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})} · ${lvQName(e.q)} · <b>${esc(lvL(e.k))}</b></span><button data-rm="${e.t}" aria-label="Remove">✕</button></li>`}).join('')}</ul>`:'<p class="note">Nothing yet. Tap a + to start.</p>'}
+    <tr><td>Timeouts</td>${qs.map(q=>`<td>${v.ev.filter(e=>(e.k==='tf'||e.k==='t30')&&e.q===q).length||''}</td>`).join('')}<td><b>${T.full.length+T.thirty.length}</b></td></tr></table></div>${lvPFLine(v)}</div>
+  <div class="card"><h2>Recent taps</h2>${recent.length?`<ul class="lv-log">${recent.map(e=>{return `<li><span>${new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})} · ${lvQName(e.q)} · <b>${esc(e.p?'Foul '+lvPName(e.p):lvL(e.k))}</b></span><button data-rm="${e.t}" aria-label="Remove">✕</button></li>`}).join('')}</ul>`:'<p class="note">Nothing yet. Tap a + to start.</p>'}
     <p class="note" style="margin-top:10px"><span id="lvSave">${esc(LV_MSG||(v.updated?'Saved on this iPad':'Not started'))}</span> · Only Clements stats are tracked here.</p>
     <button class="lv-clear" id="lvClear">${LV_CLEAR&&Date.now()-LV_CLEAR<4000?'Tap again to clear this game':'Clear this game'}</button></div>
   <div class="card"><h2>Send to the dashboard</h2><p class="note" style="margin:0 0 8px">After the game, tap Send and save the file (Save to Files works with no internet). Later, open the dashboard, go to Live Game Stats, tap Import file and pick it.</p>
@@ -296,7 +318,7 @@ function lvPaint(){
   const sel=m.querySelector('#lvSel');sel.value=LV_KEY;
   sel.onchange=()=>{if(sel.value==='__new'){m.querySelector('#lvNew').style.display='block';m.querySelector('#lvOpp').focus();return}lvSwitch(sel.value)};
   const go=m.querySelector('#lvGo');go.onclick=()=>{const o=m.querySelector('#lvOpp').value.trim();if(!o)return;const t=new Date(),ds=t.toLocaleDateString('en-US',{month:'short',day:'numeric'});const key='2627-'+lvSlug(ds+'-'+o);LV[key]=LV[key]||{opp:o,date:ds,ha:'',ev:[],updated:null};lvSwitch(key)};
-  m.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>lvAdd(b.dataset.add));
+  m.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>lvAdd(b.dataset.add));m.querySelectorAll('[data-pfopen]').forEach(b=>b.onclick=lvFoulPick);
   m.querySelectorAll('[data-osc]').forEach(inp=>{inp.onchange=()=>lvSetOpp(inp.dataset.osc,inp.value);inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()}});
   m.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>lvMinus(b.dataset.minus));
   m.querySelectorAll('[data-to]').forEach(b=>b.onclick=()=>lvAdd(b.dataset.to));
