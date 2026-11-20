@@ -111,6 +111,7 @@ ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.note{color:var(--mute);font
   .lv-net{padding:6px 12px;margin-bottom:8px;font-size:14px}.lv-net button{min-height:38px;padding:4px 12px}
   .lv-bar{margin-bottom:8px}.lv-q{padding:9px 12px}.lv-undo{padding:9px 16px}
   .lv-pad{gap:10px}.lv-pad .lv-slbl{line-height:1.12}.lv-pad .lv-slbl b{font-size:16px}.lv-pad .lv-slbl span{font-size:14px}.lv-pad .lv-slbl .note{font-size:12px}}
+.lv-sec th{color:var(--ink);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding-top:14px;background:var(--bg)}
 .lv-sc td,.lv-sc th{text-align:center}.lv-sc td:first-child,.lv-sc th:first-child{text-align:left}
 .lv input.lv-osc{-webkit-user-select:text;user-select:text;width:70px;font:inherit;font-size:20px;font-weight:700;text-align:center;padding:8px 4px;border-radius:10px;border:2px solid var(--ink);background:var(--card);color:var(--ink)}
 @keyframes swL{from{opacity:.3;transform:translateX(40px)}to{opacity:1;transform:none}}@keyframes swR{from{opacity:.3;transform:translateX(-40px)}to{opacity:1;transform:none}}main.swL{animation:swL .22s ease-out}main.swR{animation:swR .22s ease-out}
@@ -151,7 +152,15 @@ const LV_STATS=[
   {k:'dive',l:'Dives on Floor',good:true},
   {k:'to',l:'Turnovers',good:false}];
 const LV_SHOTS=[{m:'2m',x:'2x',l:'2-pointers',p:2},{m:'3m',x:'3x',l:'3-pointers',p:3},{m:'fm',x:'fx',l:'Free throws',p:1}];
-const LV_LBL={tf:'Full timeout',t30:'30-second timeout','2m':'2PT make','2x':'2PT miss','3m':'3PT make','3x':'3PT miss',fm:'FT make',fx:'FT miss',or:'Our offensive rebound',oor:'Opponent offensive rebound'};LV_STATS.forEach(s=>LV_LBL[s.k]=s.l);
+/* By-quarter rows grouped: Defense, Offense, Offensive boards. n(key,q) counts (q undefined = whole game) */
+function lvQRows(qs,n){const L='style="text-align:left"',sec=t=>`<tr class="lv-sec"><th ${L} colspan="${qs.length+2}">${t}</th></tr>`;
+  const row=(l,f)=>`<tr><td ${L}>${l}</td>${qs.map(q=>`<td>${f(q)}</td>`).join('')}<td><b>${f()}</b></td></tr>`;
+  const st=k=>LV_STATS.find(s=>s.k===k);
+  const P=q=>LV_SHOTS.reduce((a,s)=>a+s.p*n(s.m,q),0);
+  return sec('Defense')+['stl','defl','dive'].map(k=>row(st(k).l,q=>n(k,q))).join('')
+   +sec('Offense')+LV_SHOTS.map(s=>row(s.l,q=>`${n(s.m,q)}/${n(s.m,q)+n(s.x,q)}`)).join('')+row(st('to').l,q=>n('to',q))+row('Points',P)
+   +sec('Offensive boards')+row('Colts',q=>n('or',q))+row('Opponents',q=>n('oor',q));}
+const LV_LBL={tf:'Full timeout',t30:'30-second timeout','2m':'2PT make','2x':'2PT miss','3m':'3PT make','3x':'3PT miss',fm:'FT make',fx:'FT miss',or:'Colts offensive rebound',oor:'Opponent offensive rebound'};LV_STATS.forEach(s=>LV_LBL[s.k]=s.l);
 const lvL=k=>LV_LBL[k]||k;
 const LV_TO_FULL=3,LV_TO_30=2;   /* NFHS high school: 3 full (60-second) + 2 thirty-second per game; +1 full per overtime */
 const LV_MON={Oct:9,Nov:10,Dec:11,Jan:0,Feb:1,Mar:2};
@@ -255,7 +264,7 @@ function lvPaint(){
     ${lvTile('stl',cnt,1)}<div class="lv-shsum"><b>Shooting</b><div class="lv-big">${pts} pts</div><div class="note">FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</div>${(()=>{const ps=lvPoss(v);return ps>=10?`<div class="note"><b>${Math.round(100*pts/ps)}</b> per 100 poss.</div>`:''})()}</div>${lvTile('to',cnt)}
     ${lvTile('defl',cnt,1)}${lvTile('dive',cnt)}
     ${LV_SHOTS.map(s=>{const a=cnt(s.m)+cnt(s.x),mm=cnt(s.m);return `<button class="lv-sbtn lv-miss" data-add="${s.x}">Miss</button><div class="lv-slbl"><b>${s.l}</b><span>${mm}/${a}${a?' · '+Math.round(100*mm/a)+'%':''}</span><span class="note">${lvQName(LV_Q)}: ${cnt(s.m,LV_Q)}/${cnt(s.m,LV_Q)+cnt(s.x,LV_Q)}</span></div><button class="lv-sbtn lv-make" data-add="${s.m}">Make</button>`}).join('')}
-    <button class="lv-sbtn lv-miss lv-or" data-add="oor">Opp OREB</button><div class="lv-slbl"><b>Off. rebounds</b><span>Us ${cnt('or')} · Them ${cnt('oor')}</span><span class="note">${lvQName(LV_Q)}: Us ${cnt('or',LV_Q)} · Them ${cnt('oor',LV_Q)}</span></div><button class="lv-sbtn lv-make lv-or" data-add="or">Our OREB</button>
+    <button class="lv-sbtn lv-miss lv-or" data-add="oor">Opp OREB</button><div class="lv-slbl"><b>Off. rebounds</b><span>Colts ${cnt('or')} · Opp ${cnt('oor')}</span><span class="note">${lvQName(LV_Q)}: Colts ${cnt('or',LV_Q)} · Opp ${cnt('oor',LV_Q)}</span></div><button class="lv-sbtn lv-make lv-or" data-add="or">Colts OREB</button>
   </div>
   ${lvScoreHtml(v,qs)}
   <div class="card lv-tos"><h2>Timeouts <span class="note">· tap one when we use it, tap a used one to give it back</span></h2>
@@ -263,11 +272,8 @@ function lvPaint(){
     <div class="lv-torow"><b>30-second</b><div>${thP}</div><span class="${thirtyLeft?'':'L'}">${thirtyLeft} left</span></div>
     <p class="note">High school (NFHS): 3 full and 2 thirty-second timeouts per game; unused ones carry over, and each overtime adds 1 full.</p></div>
   <div class="card"><h2>By quarter</h2><div style="overflow:auto"><table><tr><th>Stat</th>${qs.map(q=>`<th>${lvQName(q)}</th>`).join('')}<th>Total</th></tr>
-    ${LV_STATS.map(s=>`<tr><td>${s.l}</td>${qs.map(q=>`<td>${cnt(s.k,q)}</td>`).join('')}<td><b>${cnt(s.k)}</b></td></tr>`).join('')}
-    ${LV_SHOTS.map(s=>`<tr><td>${s.l}</td>${qs.map(q=>`<td>${cnt(s.m,q)}/${cnt(s.m,q)+cnt(s.x,q)}</td>`).join('')}<td><b>${cnt(s.m)}/${cnt(s.m)+cnt(s.x)}</b></td></tr>`).join('')}
-    <tr><td>Our off. rebounds</td>${qs.map(q=>`<td>${cnt('or',q)}</td>`).join('')}<td><b>${cnt('or')}</b></td></tr>
-    <tr><td>Opp off. rebounds</td>${qs.map(q=>`<td>${cnt('oor',q)}</td>`).join('')}<td><b>${cnt('oor')}</b></td></tr>
-    <tr><td>Points</td>${qs.map(q=>`<td>${LV_SHOTS.reduce((a,s)=>a+s.p*cnt(s.m,q),0)}</td>`).join('')}<td><b>${pts}</b></td></tr>
+    ${lvQRows(qs,cnt)}
+    <tr class="lv-sec"><th style="text-align:left" colspan="${qs.length+2}">Other</th></tr>
     <tr><td>Timeouts</td>${qs.map(q=>`<td>${v.ev.filter(e=>(e.k==='tf'||e.k==='t30')&&e.q===q).length||''}</td>`).join('')}<td><b>${T.full.length+T.thirty.length}</b></td></tr></table></div></div>
   <div class="card"><h2>Recent taps</h2>${recent.length?`<ul class="lv-log">${recent.map(e=>{return `<li><span>${new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})} · ${lvQName(e.q)} · <b>${esc(lvL(e.k))}</b></span><button data-rm="${e.t}" aria-label="Remove">✕</button></li>`}).join('')}</ul>`:'<p class="note">Nothing yet. Tap a + to start.</p>'}
     <p class="note" style="margin-top:10px"><span id="lvSave">${esc(LV_MSG||(v.updated?'Saved on this iPad':'Not started'))}</span> · Only Clements stats are tracked here.</p>
