@@ -121,7 +121,15 @@ ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.note{color:var(--mute);font
 .lv-pfgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .lv-pfb{display:flex;flex-direction:column;align-items:center;gap:1px;padding:10px 4px;min-height:84px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
 .lv-pfb b{font-size:24px;line-height:1.1}.lv-pfb span{font-size:13px;color:var(--mute)}.lv-pfb i{font-style:normal;font-weight:800;font-size:14px}
-.lv-pfb:active{transform:scale(.96)}.lv-pfb.three{border-color:#c77700}.lv-pfb.four{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--card))}.lv-pfb.out{border-color:var(--bad);opacity:.55}
+.lv-pfb:active{transform:scale(.96)}
+.lv-pfb.f2,.lv-pfc.f2{background:#fbd5d7;border-color:#f2a7ab;color:#7a1a1f}
+.lv-pfb.f3,.lv-pfc.f3{background:#d9534f;border-color:#b52b27;color:#fff}
+.lv-pfb.f4,.lv-pfc.f4{background:#ff0000;border-color:#b30000;color:#fff}
+.lv-pfb.f5,.lv-pfc.f5{background:#111;border-color:#ff0000;color:#fff}
+.lv-pfb.f2 span,.lv-pfb.f3 span,.lv-pfb.f4 span,.lv-pfb.f5 span{color:inherit;opacity:.9}
+.lv-pfchips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-4px 0 12px}
+.lv-pfct{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+.lv-pfc{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:2px solid;font-size:16px;font-weight:700}.lv-pfc b{font-size:18px}
 .lv-pfnone{margin-top:10px;width:100%;min-height:44px;border-radius:10px;border:1px dashed var(--mute);background:none;color:var(--mute);font:inherit}
 @media(max-width:520px){.lv-pfgrid{grid-template-columns:repeat(4,1fr)}}
 .lv-sec th{color:var(--ink);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding-top:14px;background:var(--bg)}
@@ -181,10 +189,13 @@ const lvPName=p=>{const r=LV_ROSTER.find(x=>x[0]===p);return '#'+p+(r?' '+r[1]:'
 const lvPF=(v,p)=>v.ev.filter(e=>e.k==='pf'&&e.p===p).length;
 const lvPFList=v=>{const m={};v.ev.forEach(e=>{if(e.k==='pf'&&e.p!=null)m[e.p]=(m[e.p]||0)+1});return Object.entries(m).sort((x,y)=>y[1]-x[1]||(+x[0])-(+y[0]))};
 function lvPFLine(v){const L=lvPFList(v);if(!L.length)return '';return `<p class="note" style="margin:8px 0 0"><b>Fouls by player:</b> ${L.map(([p,n])=>`<span class="${n>=LV_FOUL_OUT?'L':''}">${esc(lvPName(p))} ${n}${n>=LV_FOUL_OUT?' (out)':''}</span>`).join(' · ')}</p>`}
+const lvPFc=n=>n>=LV_FOUL_OUT?'f5':n>=4?'f4':n===3?'f3':n===2?'f2':'';
+function lvPFChips(v){const L=lvPFList(v).filter(x=>x[1]>=2);if(!L.length)return '';
+  return `<div class="lv-pfchips"><span class="lv-pfct">Fouls</span>${L.map(([p,n])=>`<span class="lv-pfc ${lvPFc(n)}">${esc(lvPName(p))} <b>${n>=LV_FOUL_OUT?'OUT':n}</b></span>`).join('')}</div>`}
 function lvFoulPick(){const v=LV[LV_KEY];if(!v)return;let o=document.getElementById('lvPF');if(o)o.remove();
   o=document.createElement('div');o.id='lvPF';o.className='lv-pfov';
   o.innerHTML=`<div class="lv-pfbox"><div class="lv-pfhd"><b>Foul on · ${lvQName(LV_Q)}</b><button class="lv-pfx" data-pfx aria-label="Close">✕</button></div>
-    <div class="lv-pfgrid">${LV_ROSTER.map(([j,i])=>{const n=lvPF(v,j);return `<button class="lv-pfb${n>=LV_FOUL_OUT?' out':n===LV_FOUL_OUT-1?' four':n===LV_FOUL_OUT-2?' three':''}" data-pf="${j}"><b>#${j}</b><span>${esc(i)}</span><i>${n?n+(n>=LV_FOUL_OUT?' · out':''):'–'}</i></button>`}).join('')}</div>
+    <div class="lv-pfgrid">${LV_ROSTER.map(([j,i])=>{const n=lvPF(v,j);return `<button class="lv-pfb ${lvPFc(n)}" data-pf="${j}"><b>#${j}</b><span>${esc(i)}</span><i>${n?n+(n>=LV_FOUL_OUT?' · out':''):'–'}</i></button>`}).join('')}</div>
     <button class="lv-pfnone" data-pf="">Not sure who (team foul only)</button></div>`;
   document.body.appendChild(o);
   o.onclick=e=>{const b=e.target.closest('[data-pf],[data-pfx]');if(e.target===o||(b&&b.hasAttribute('data-pfx'))){o.remove();return}if(b){o.remove();lvAdd('pf',b.dataset.pf||null)}}}
@@ -192,7 +203,7 @@ const lvFoulQ=(v,q)=>{const isOT=x=>/^OT/.test(x);return v.ev.filter(e=>e.k==='p
 function lvFoulHtml(v){const n=lvFoulQ(v,LV_Q),tot=v.ev.filter(e=>e.k==='pf').length,left=LV_BONUS-n;
   const msg=n>=LV_BONUS?'Bonus: they shoot 2':left===1?'Next foul = bonus':`${left} to bonus`;
   return `<div class="lv-foul${n>=LV_BONUS?' bonus':left===1?' near':''}"><button class="lv-minus" data-minus="pf" aria-label="Remove one foul">−</button>
-    <div class="lv-fn"><b>Fouls ${/^OT/.test(LV_Q)?'Q4+OT':lvQName(LV_Q)}: ${n}</b><span>${msg}</span><span class="note">${(()=>{const T=lvPFList(v).filter(x=>x[1]>=3);return T.length?T.map(([p,n])=>`<b class="${n>=LV_FOUL_OUT?'L':''}">#${p}: ${n}</b>`).join(' · '):tot+' total'})()}</span></div>
+    <div class="lv-fn"><b>Fouls ${/^OT/.test(LV_Q)?'Q4+OT':lvQName(LV_Q)}: ${n}</b><span>${msg}</span><span class="note">${tot} total</span></div>
     <button class="lv-fplus" data-pfopen aria-label="Add team foul">+ Foul</button></div>`}
 const LV_LBL={tf:'Full timeout',t30:'30-second timeout','2m':'2PT make','2x':'2PT miss','3m':'3PT make','3x':'3PT miss',fm:'FT make',fx:'FT miss',or:'Colts offensive rebound',pf:'Team foul',oor:'Opponent offensive rebound'};LV_STATS.forEach(s=>LV_LBL[s.k]=s.l);
 const lvL=k=>LV_LBL[k]||k;
@@ -293,7 +304,7 @@ function lvPaint(){
   <div class="lv-bar">
     <div class="lv-qs">${qs.map(q=>`<button class="lv-q${q===LV_Q?' on':''}" data-q="${q}">${lvQName(q)}</button>`).join('')}<button class="lv-q" data-q="+OT">+ OT</button></div>
     ${lvFoulHtml(v)}<button class="lv-undo" id="lvUndo"${v.ev.length?'':' disabled'}>↶ Undo last</button>
-  </div>
+  </div>${lvPFChips(v)}
   <div class="lv-pad">
     ${lvTile('stl',cnt,1)}<div class="lv-shsum"><b>Shooting</b><div class="lv-big">${pts} pts</div><div class="note">FG ${fgm}/${fga}${fga?' ('+Math.round(100*fgm/fga)+'%)':''}</div>${(()=>{const ps=lvPoss(v);return ps>=10?`<div class="note"><b>${Math.round(100*pts/ps)}</b> per 100 poss.</div>`:''})()}</div>${lvTile('to',cnt)}
     ${lvTile('defl',cnt,1)}${lvTile('dive',cnt)}
